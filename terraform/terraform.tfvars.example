@@ -1,0 +1,10 @@
+project_id  = "your-gcp-project-id"
+region      = "us-central1"
+bucket_name = "your-globally-unique-igdb-bucket"
+service_account_email = "existing-service-account@your-gcp-project-id.iam.gserviceaccount.com"
+environment = "portfolio"
+labels = {
+  owner       = "data-platform"
+  environment = "portfolio"
+}
+bucket_lifecycle_delete_age_days = 365
