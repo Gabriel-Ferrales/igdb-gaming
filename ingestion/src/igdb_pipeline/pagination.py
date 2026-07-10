@@ -1,0 +1,1 @@
+"""IGDB result pagination interfaces."""

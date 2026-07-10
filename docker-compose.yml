@@ -1,0 +1,4 @@
+# Services are intentionally defined in component-specific Compose files.
+# Run the Kestra stack with: docker compose -f kestra/docker-compose.yml up -d
+services: {}
+

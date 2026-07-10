@@ -1,0 +1,21 @@
+igdb_analytics:
+  target: dev
+  outputs:
+    dev:
+      type: bigquery
+      method: oauth
+      project: "{{ env_var('GCP_PROJECT_ID') }}"
+      dataset: "{{ env_var('BQ_DEV_DATASET', 'gaming_dev') }}"
+      location: "{{ env_var('GCP_REGION', 'us-central1') }}"
+      threads: 4
+      priority: interactive
+    prod:
+      type: bigquery
+      method: service-account
+      keyfile: "{{ env_var('GOOGLE_APPLICATION_CREDENTIALS') }}"
+      project: "{{ env_var('GCP_PROJECT_ID') }}"
+      dataset: "{{ env_var('BQ_PROD_DATASET', 'gaming_prod') }}"
+      location: "{{ env_var('GCP_REGION', 'us-central1') }}"
+      threads: 8
+      priority: batch
+

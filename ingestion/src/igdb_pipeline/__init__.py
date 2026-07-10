@@ -1,0 +1,1 @@
+"""IGDB ingestion pipeline package."""

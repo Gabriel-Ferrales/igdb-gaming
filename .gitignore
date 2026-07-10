@@ -1,0 +1,43 @@
+.env
+.env.*
+!.env.example
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+.uv-cache/
+*.egg-info/
+dist/
+build/
+
+# dbt
+dbt/target/
+dbt/logs/
+dbt/dbt_packages/
+dbt/packages/
+dbt/profiles/profiles.yml
+
+# Terraform
+*.tfstate
+*.tfstate.*
+*.tfvars
+!*.tfvars.example
+.terraform/
+.terraform.lock.hcl
+crash.log
+
+# Credentials and secrets
+*service-account*.json
+*credentials*.json
+*.pem
+*.key
+
+# Kestra runtime data
+kestra/data/
+kestra/storage/
+kestra/tmp/
+
+.DS_Store
+.vscode/
