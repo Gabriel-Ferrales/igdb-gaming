@@ -117,14 +117,8 @@ def nested_column_summary(df: pd.DataFrame) -> pd.DataFrame:
                 "contains_list": any(
                     isinstance(value, (list, tuple)) for value in non_null
                 ),
-                "contains_dict": any(
-                    isinstance(value, dict) for value in non_null
-                ),
-                "example": (
-                    non_null.iloc[0]
-                    if not non_null.empty
-                    else None
-                ),
+                "contains_dict": any(isinstance(value, dict) for value in non_null),
+                "example": (non_null.iloc[0] if not non_null.empty else None),
             }
         )
 
@@ -218,9 +212,7 @@ def field_availability_summary(
     return pd.DataFrame(
         {
             "requested_field": requested_fields,
-            "is_returned": [
-                field in df.columns for field in requested_fields
-            ],
+            "is_returned": [field in df.columns for field in requested_fields],
         }
     )
 
@@ -279,9 +271,7 @@ def relationship_coverage(
     return pd.DataFrame(
         [
             {
-                "relationship": (
-                    f"{source_column} -> {target_column}"
-                ),
+                "relationship": (f"{source_column} -> {target_column}"),
                 "reference_count": len(references),
                 "unique_reference_count": len(unique_references),
                 "matched_unique_count": len(matched),

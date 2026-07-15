@@ -22,8 +22,6 @@ def test_page_object_name_is_scoped_to_batch_and_id_range() -> None:
 
 
 def test_manifest_shares_batch_prefix() -> None:
-    name = manifest_object_name(
-        "genres", "historical", date(2026, 7, 15), "batch-456"
-    )
+    name = manifest_object_name("genres", "historical", date(2026, 7, 15), "batch-456")
 
     assert name.endswith("batch_id=batch-456/manifest.json")

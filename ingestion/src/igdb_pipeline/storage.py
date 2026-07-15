@@ -59,7 +59,9 @@ def manifest_object_name(
     batch_id: str,
 ) -> str:
     """Build the manifest name for one batch."""
-    return f"{batch_prefix(endpoint, load_type, extraction_date, batch_id)}/manifest.json"
+    return (
+        f"{batch_prefix(endpoint, load_type, extraction_date, batch_id)}/manifest.json"
+    )
 
 
 class GCSJsonUploader:

@@ -37,12 +37,12 @@ def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="Extract IGDB data to GCS.")
     subparsers = parser.add_subparsers(dest="command", required=True)
     extract_parser = subparsers.add_parser("extract", help="Run an extraction batch.")
-    extract_parser.add_argument(
-        "--endpoint", choices=tuple(ENDPOINTS), default="games"
-    )
+    extract_parser.add_argument("--endpoint", choices=tuple(ENDPOINTS), default="games")
     extract_parser.add_argument("--page-size", type=int, default=500)
     extract_parser.add_argument("--max-pages", type=int)
-    extract_parser.add_argument("--max-records", "--limit", dest="max_records", type=int)
+    extract_parser.add_argument(
+        "--max-records", "--limit", dest="max_records", type=int
+    )
     extract_parser.add_argument("--start-after-id", type=int, default=0)
     extract_parser.add_argument("--where")
     extract_parser.add_argument(

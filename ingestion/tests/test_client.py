@@ -53,9 +53,7 @@ def test_retries_are_bounded(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(client.time, "sleep", sleeps.append)
 
     with pytest.raises(httpx.HTTPStatusError):
-        client.query_igdb(
-            "games", "fields id;", "client", "token", max_retries=2
-        )
+        client.query_igdb("games", "fields id;", "client", "token", max_retries=2)
 
     assert calls == 3
     assert sleeps == [1.0, 2.0]
@@ -76,9 +74,7 @@ def test_timeout_is_retried(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(client.httpx, "post", post)
     monkeypatch.setattr(client.time, "sleep", sleeps.append)
 
-    assert client.query_igdb("games", "fields id;", "client", "token") == [
-        {"id": 1}
-    ]
+    assert client.query_igdb("games", "fields id;", "client", "token") == [{"id": 1}]
     assert sleeps == [1.0]
 
 

@@ -12,12 +12,7 @@ from igdb_pipeline.pagination import (
 def test_build_query_uses_cursor_sort_and_limit() -> None:
     query = build_query(["id", "name"], page_size=250, last_id=42)
 
-    assert query == (
-        "fields id, name;\n"
-        "where id > 42;\n"
-        "sort id asc;\n"
-        "limit 250;"
-    )
+    assert query == ("fields id, name;\nwhere id > 42;\nsort id asc;\nlimit 250;")
     assert "offset" not in query.lower()
 
 

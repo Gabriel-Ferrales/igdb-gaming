@@ -1,4 +1,5 @@
 """Environment-backed pipeline configuration."""
+
 from pathlib import Path
 
 from pydantic_settings import BaseSettings, SettingsConfigDict

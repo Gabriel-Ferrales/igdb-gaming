@@ -159,9 +159,7 @@ def run_extraction(
         "uploaded_objects": uploaded_objects.copy(),
         "failure": failure,
     }
-    manifest_name = manifest_object_name(
-        endpoint, load_type, extraction_date, batch_id
-    )
+    manifest_name = manifest_object_name(endpoint, load_type, extraction_date, batch_id)
     uploader.upload(manifest, manifest_name)
 
     if extraction_error is not None:
