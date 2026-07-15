@@ -1,4 +1,3 @@
-"""Twitch OAuth authentication interfaces."""
 """Authentication with Twitch for access to the IGDB API."""
 
 from dataclasses import dataclass
