@@ -41,3 +41,16 @@ kestra/tmp/
 
 .DS_Store
 .vscode/
+
+# Jupyter
+notebooks/.ipynb_checkpoints/
+
+# Local extracted data
+ingestion/data/
+
+# Python
+__pycache__/
+*.pyc
+
+# Environment
+.env

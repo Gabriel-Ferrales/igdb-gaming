@@ -15,7 +15,14 @@ dependencies = [
 ]
 
 [dependency-groups]
-dev = ["pytest>=8.3", "ruff>=0.6"]
+dev = [
+    "ipykernel>=7.3.0",
+    "jupyterlab>=4.6.1",
+    "matplotlib>=3.11.0",
+    "pandas>=3.0.3",
+    "pytest>=8.3",
+    "ruff>=0.6",
+]
 
 [project.scripts]
 igdb-pipeline = "igdb_pipeline.cli:main"
