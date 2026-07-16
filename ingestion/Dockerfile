@@ -12,4 +12,5 @@ RUN uv sync --frozen --no-dev
 ENV PATH="/app/.venv/bin:$PATH"
 ENV PYTHONPATH="/app/src"
 
-ENTRYPOINT ["python", "-m", "igdb_pipeline.cli"]
+ENTRYPOINT ["python", "-m"]
+CMD ["igdb_pipeline.cli"]
