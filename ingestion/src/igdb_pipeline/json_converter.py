@@ -1,6 +1,7 @@
 """Validated, non-destructive JSON-array to NDJSON conversion."""
 
 import json
+import logging
 from datetime import UTC, datetime
 from pathlib import PurePosixPath
 from typing import Any
@@ -16,6 +17,34 @@ TIMESTAMP_FIELDS = (
     "start_date",
     "date",
 )
+
+LOGGER = logging.getLogger(__name__)
+
+
+def safe_unix_timestamp(
+    value: Any,
+    *,
+    endpoint: str,
+    batch_id: str,
+    record_id: int,
+    field_name: str,
+) -> str | None:
+    """Convert a source Unix timestamp to UTC without discarding its record."""
+    if value is None:
+        return None
+    try:
+        return datetime.fromtimestamp(float(value), UTC).isoformat()
+    except (TypeError, ValueError, OverflowError, OSError):
+        LOGGER.warning(
+            "Invalid Unix timestamp endpoint=%s batch_id=%s record_id=%s "
+            "field=%s value=%r",
+            endpoint,
+            batch_id,
+            record_id,
+            field_name,
+            value,
+        )
+        return None
 
 
 def _object_name(uri_or_name: str, bucket_name: str) -> str:
@@ -132,10 +161,14 @@ def convert_batch(
             seen.add(record_id)
             converted: dict[str, Any] = dict(record)
             for field in TIMESTAMP_FIELDS:
-                if converted.get(field) is not None:
-                    converted[f"{field}_ts"] = datetime.fromtimestamp(
-                        int(converted[field]), UTC
-                    ).isoformat()
+                if field in converted:
+                    converted[f"{field}_ts"] = safe_unix_timestamp(
+                        converted[field],
+                        endpoint=batch.endpoint,
+                        batch_id=batch.batch_id,
+                        record_id=record_id,
+                        field_name=field,
+                    )
             converted.update(
                 {
                     "_batch_id": batch.batch_id,

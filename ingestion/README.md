@@ -41,6 +41,11 @@ Use `--retry-failed` to select failed registry entries. `--batch-id` targets a
 specific recovery batch. `--skip-conversion` is accepted only when an existing
 conversion manifest and all of its files pass validation.
 
+Invalid source Unix timestamps do not block a batch: the original value is
+preserved and the derived `*_ts` field is written as `NULL`. A loader run exits
+non-zero when one or more selected batches fail (after attempting all selected
+batches), so failed batches can be recovered with `--retry-failed`.
+
 ```mermaid
 flowchart TD
     classDef source fill:#F9AB00,stroke:#333,stroke-width:1px,color:#000;

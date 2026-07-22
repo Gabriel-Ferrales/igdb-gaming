@@ -21,6 +21,13 @@ class BatchDecision:
     reason: str
 
 
+@dataclass(frozen=True)
+class BatchRunSummary:
+    loaded: int = 0
+    skipped: int = 0
+    failed: int = 0
+
+
 class BatchPipeline:
     def __init__(
         self,
@@ -88,10 +95,14 @@ class BatchPipeline:
 
     def run(
         self, decisions: list[BatchDecision], *, skip_conversion: bool = False
-    ) -> None:
+    ) -> BatchRunSummary:
         self.registry.ensure_table()
+        loaded_count = 0
+        skipped_count = 0
+        failed_count = 0
         for decision in decisions:
             if decision.action == "ignore":
+                skipped_count += 1
                 continue
             batch = decision.batch
             self.registry.register_discovered(batch)
@@ -124,8 +135,20 @@ class BatchPipeline:
                 LOGGER.info(
                     "Loaded %s/%s (%d records)", batch.endpoint, batch.batch_id, loaded
                 )
+                loaded_count += 1
             except Exception as error:
+                failed_count += 1
                 LOGGER.exception("Batch %s/%s failed", batch.endpoint, batch.batch_id)
                 self.registry.set_status(
                     batch, "failed", error_message=str(error)[:10000]
                 )
+        summary = BatchRunSummary(
+            loaded=loaded_count, skipped=skipped_count, failed=failed_count
+        )
+        LOGGER.info(
+            "Batch run summary: loaded=%d skipped=%d failed=%d",
+            summary.loaded,
+            summary.skipped,
+            summary.failed,
+        )
+        return summary

@@ -41,7 +41,7 @@ def _clients() -> tuple[storage.Client, bigquery.Client]:
     )
 
 
-def main(argv: Sequence[str] | None = None) -> None:
+def main(argv: Sequence[str] | None = None) -> int:
     logging.basicConfig(level=logging.INFO, format="%(levelname)s %(message)s")
     args = build_parser().parse_args(argv)
     storage_client, bq_client = _clients()
@@ -65,9 +65,17 @@ def main(argv: Sequence[str] | None = None) -> None:
         print(
             f"{item.action:16} {item.batch.endpoint}/{item.batch.batch_id}: {item.reason}"
         )
-    if not is_discover and not args.dry_run:
-        pipeline.run(decisions, skip_conversion=args.skip_conversion)
+    if is_discover:
+        return 0
+    if args.dry_run:
+        skipped = sum(item.action == "ignore" for item in decisions)
+        logging.getLogger(__name__).info(
+            "Batch run summary: loaded=0 skipped=%d failed=0", skipped
+        )
+        return 0
+    summary = pipeline.run(decisions, skip_conversion=args.skip_conversion)
+    return 1 if summary.failed else 0
 
 
 if __name__ == "__main__":
-    main()
+    raise SystemExit(main())
