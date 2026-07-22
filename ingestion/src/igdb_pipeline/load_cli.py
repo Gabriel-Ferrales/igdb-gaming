@@ -17,7 +17,9 @@ def build_parser() -> argparse.ArgumentParser:
         description="Load existing IGDB GCS batches into BigQuery."
     )
     sub = parser.add_subparsers(dest="command", required=True)
-    discover = sub.add_parser("discover", help="List manifests without writing state.")
+    discover = sub.add_parser(
+        "discover", help="List manifests and registry status without writing state."
+    )
     discover.add_argument("--endpoint", choices=tuple(ENDPOINTS))
     run = sub.add_parser("run", help="Convert and load selected batches.")
     selection = run.add_mutually_exclusive_group(required=True)
@@ -59,7 +61,8 @@ def main(argv: Sequence[str] | None = None) -> int:
         batch_id=getattr(args, "batch_id", None),
         max_batches=getattr(args, "max_batches", None),
         retry_failed=getattr(args, "retry_failed", False),
-        read_registry=not is_discover,
+        # Planning only reads GCS and the registry. Registry writes occur only in run().
+        read_registry=True,
     )
     for item in decisions:
         print(
