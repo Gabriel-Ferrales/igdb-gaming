@@ -1,0 +1,27 @@
+version: 2
+
+sources:
+  - name: gaming_raw
+    description: "Raw IGDB data loaded from GCS into BigQuery."
+
+    database: "{{ env_var('GCP_PROJECT_ID') }}"
+    schema: "{{ env_var('BQ_RAW_DATASET') }}"
+
+    tables:
+      - name: games
+        description: "Raw games endpoint."
+
+      - name: companies
+        description: "Raw companies endpoint."
+
+      - name: genres
+        description: "Raw genres endpoint."
+
+      - name: platforms
+        description: "Raw platforms endpoint."
+
+      - name: involved_companies
+        description: "Raw relationship between games and companies."
+
+      - name: release_dates
+        description: "Raw release date records."

@@ -1,0 +1,154 @@
+version: 2
+
+models:
+  - name: dim_games
+    description: "Current descriptive game dimension. Grain: one row per game_id."
+    columns:
+      - name: game_id
+        description: "IGDB game identifier and primary key."
+        tests:
+          - not_null
+          - unique
+
+  - name: dim_platforms
+    description: "Current descriptive platform dimension. Grain: one row per platform_id."
+    columns:
+      - name: platform_id
+        description: "IGDB platform identifier and primary key."
+        tests:
+          - not_null
+          - unique
+
+  - name: dim_genres
+    description: "Current descriptive genre dimension. Grain: one row per genre_id."
+    columns:
+      - name: genre_id
+        description: "IGDB genre identifier and primary key."
+        tests:
+          - not_null
+          - unique
+
+  - name: dim_companies
+    description: "Current descriptive company dimension. Grain: one row per company_id."
+    columns:
+      - name: company_id
+        description: "IGDB company identifier and primary key."
+        tests:
+          - not_null
+          - unique
+
+  - name: bridge_game_platforms
+    description: "Many-to-many game-to-platform bridge. Grain: one row per game_id + platform_id."
+    tests:
+      - unique_combination_of_columns:
+          arguments:
+            combination_of_columns: [game_id, platform_id]
+    columns:
+      - name: game_id
+        description: "IGDB game identifier."
+        tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_games')
+                field: game_id
+      - name: platform_id
+        description: "IGDB platform identifier."
+        tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_platforms')
+                field: platform_id
+
+  - name: bridge_game_genres
+    description: "Many-to-many game-to-genre bridge. Grain: one row per game_id + genre_id."
+    tests:
+      - unique_combination_of_columns:
+          arguments:
+            combination_of_columns: [game_id, genre_id]
+    columns:
+      - name: game_id
+        description: "IGDB game identifier."
+        tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_games')
+                field: game_id
+      - name: genre_id
+        description: "IGDB genre identifier."
+        tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_genres')
+                field: genre_id
+
+  - name: fct_game_companies
+    description: "Factless fact table for game-company participation, enriched with additive role indicators. Grain: one row per involved_company_id."
+    columns:
+      - name: involved_company_id
+        description: "IGDB involved-company relationship identifier and primary key."
+        tests:
+          - not_null
+          - unique
+      - name: game_id
+        description: "IGDB game identifier."
+        tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_games')
+                field: game_id
+      - name: company_id
+        description: "IGDB company identifier."
+        tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_companies')
+                field: company_id
+
+  - name: fct_game_releases
+    description: "Game release event fact table. Grain: one row per release_date_id."
+    columns:
+      - name: release_date_id
+        description: "IGDB release-date event identifier and primary key."
+        tests:
+          - not_null
+          - unique
+      - name: game_id
+        description: "IGDB game identifier."
+        tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_games')
+                field: game_id
+      - name: platform_id
+        description: "IGDB platform identifier; nullable in the source."
+        tests:
+          - relationships:
+              arguments:
+                to: ref('dim_platforms')
+                field: platform_id
+      - name: release_date_raw
+        description: "Original nullable Unix timestamp integer retained for source lineage and debugging."
+      - name: release_timestamp
+        description: "Nullable UTC timestamp safely derived during ingestion; invalid or missing source values remain null."
+      - name: release_date
+        description: "Nullable BigQuery DATE derived from release_timestamp and intended for calendar analysis."
+
+  - name: fct_game_ratings
+    description: "Current game rating state as of snapshot_date; this table does not preserve historical versions. Grain: one row per game_id."
+    columns:
+      - name: game_id
+        description: "IGDB game identifier and primary key."
+        tests:
+          - not_null
+          - unique
+          - relationships:
+              arguments:
+                to: ref('dim_games')
+                field: game_id
