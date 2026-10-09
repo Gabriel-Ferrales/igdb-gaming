@@ -1,0 +1,95 @@
+version: 2
+
+models:
+  - name: int_game_genres
+    description: "Relación muchos a muchos entre juegos y géneros. Grain: una fila por game_id + genre_id."
+    tests:
+      - unique_combination_of_columns:
+          arguments:
+            combination_of_columns: [game_id, genre_id]
+    columns:
+      - name: game_id
+        tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('stg_games')
+                field: game_id
+      - name: genre_id
+        tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('stg_genres')
+                field: genre_id
+
+  - name: int_game_platforms
+    description: "Relación muchos a muchos entre juegos y plataformas. Grain: una fila por game_id + platform_id."
+    tests:
+      - unique_combination_of_columns:
+          arguments:
+            combination_of_columns: [game_id, platform_id]
+    columns:
+      - name: game_id
+        tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('stg_games')
+                field: game_id
+      - name: platform_id
+        tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('stg_platforms')
+                field: platform_id
+
+  - name: int_game_companies
+    description: "Participación de compañías en videojuegos. Grain: una fila por involved_company_id."
+    columns:
+      - name: involved_company_id
+        tests:
+          - not_null
+          - unique
+      - name: game_id
+        tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('stg_games')
+                field: game_id
+      - name: company_id
+        tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('stg_companies')
+                field: company_id
+
+  - name: int_game_releases
+    description: "Eventos individuales de lanzamiento. Grain: una fila por release_date_id."
+    columns:
+      - name: release_date_id
+        tests:
+          - not_null
+          - unique
+      - name: game_id
+        tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('stg_games')
+                field: game_id
+      - name: platform_id
+        tests:
+          - relationships:
+              arguments:
+                to: ref('stg_platforms')
+                field: platform_id
+      - name: release_date_raw
+        description: "Original nullable Unix timestamp integer retained for lineage."
+      - name: release_timestamp
+        description: "Nullable UTC timestamp safely derived during ingestion."
+      - name: release_date
+        description: "Nullable BigQuery DATE derived once in staging from release_timestamp."

@@ -1,0 +1,125 @@
+version: 2
+
+models:
+  - name: games_release_trends
+    description: >-
+      Yearly release activity for Looker Studio. Grain: one row per non-null
+      release_year. release_count is a release-event count; distinct_games_released
+      counts each game once per year; distinct_platforms excludes null platforms.
+    columns:
+      - name: release_year
+        description: "Calendar year derived from the typed release date."
+        tests:
+          - not_null
+          - unique
+      - name: release_count
+        description: "Number of release-event fact rows in the year."
+      - name: distinct_games_released
+        description: "Number of distinct games with at least one release event in the year."
+      - name: distinct_platforms
+        description: "Number of distinct non-null platforms represented by release events in the year."
+
+  - name: genre_performance
+    description: >-
+      Current game and rating metrics by genre. Grain: one row per genre_id.
+      Multi-genre games contribute once to every assigned genre. Rating measures
+      are current-state metrics, not history.
+    columns:
+      - name: genre_id
+        description: "IGDB genre identifier and primary key."
+        tests:
+          - not_null
+          - unique
+          - relationships:
+              arguments:
+                to: ref('dim_genres')
+                field: genre_id
+      - name: distinct_game_count
+        description: "Distinct games assigned to the genre."
+      - name: games_with_user_rating
+        description: "Distinct genre games with a non-null user rating."
+      - name: average_user_rating
+        description: "Average current user rating across rated games in the genre."
+      - name: total_user_rating_count
+        description: "Sum of current user-rating vote counts across genre games."
+      - name: games_with_critic_rating
+        description: "Distinct genre games with a non-null aggregated critic rating."
+      - name: average_aggregated_rating
+        description: "Average current aggregated critic rating across rated games in the genre."
+
+  - name: platform_performance
+    description: >-
+      Catalog and release-event metrics by platform. Grain: one row per platform_id.
+      Game membership and release events are aggregated separately to prevent fanout.
+    columns:
+      - name: platform_id
+        description: "IGDB platform identifier and primary key."
+        tests:
+          - not_null
+          - unique
+          - relationships:
+              arguments:
+                to: ref('dim_platforms')
+                field: platform_id
+      - name: distinct_game_count
+        description: "Distinct games associated with the platform in the game-platform bridge."
+      - name: release_event_count
+        description: "Release-event fact rows associated with the platform."
+      - name: first_release_date
+        description: "Earliest non-null typed release date for the platform."
+      - name: latest_release_date
+        description: "Latest non-null typed release date for the platform."
+
+  - name: company_performance
+    description: >-
+      Distinct game participation metrics by company and role. Grain: one row per
+      company_id. Distinct game semantics prevent duplicate involvement records
+      from inflating counts.
+    columns:
+      - name: company_id
+        description: "IGDB company identifier and primary key."
+        tests:
+          - not_null
+          - unique
+          - relationships:
+              arguments:
+                to: ref('dim_companies')
+                field: company_id
+      - name: distinct_game_count
+        description: "Distinct games in which the company has any involvement record."
+      - name: developer_game_count
+        description: "Distinct games in which the company is marked as a developer."
+      - name: publisher_game_count
+        description: "Distinct games in which the company is marked as a publisher."
+      - name: porting_game_count
+        description: "Distinct games in which the company is marked as a porting company."
+      - name: supporting_game_count
+        description: "Distinct games in which the company is marked as a supporting company."
+
+  - name: top_rated_games
+    description: >-
+      Game-level current rating metrics for ranking and filtering. Grain: one row
+      per game_id. No vote-count threshold is imposed; ratings are current state,
+      not historical observations.
+    columns:
+      - name: game_id
+        description: "IGDB game identifier and primary key."
+        tests:
+          - not_null
+          - unique
+          - relationships:
+              arguments:
+                to: ref('dim_games')
+                field: game_id
+      - name: first_release_date
+        description: "Nullable BigQuery DATE derived from the game's safely converted first-release timestamp."
+      - name: user_rating
+        description: "Current IGDB user rating; nullable when unavailable."
+      - name: user_rating_count
+        description: "Current number of user ratings; use as a confidence or popularity filter."
+      - name: aggregated_rating
+        description: "Current aggregated critic rating; nullable when unavailable."
+      - name: aggregated_rating_count
+        description: "Current number of critic ratings contributing to aggregated_rating."
+      - name: rating_snapshot_date
+        description: "dbt build date for the current-state table; it does not imply retained history."
