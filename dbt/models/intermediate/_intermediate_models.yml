@@ -2,7 +2,7 @@ version: 2
 
 models:
   - name: int_game_genres
-    description: "Relación muchos a muchos entre juegos y géneros. Grain: una fila por game_id + genre_id."
+    description: "Many-to-many game-to-genre relationship. Grain: one row per game_id + genre_id."
     tests:
       - unique_combination_of_columns:
           arguments:
@@ -24,7 +24,7 @@ models:
                 field: genre_id
 
   - name: int_game_platforms
-    description: "Relación muchos a muchos entre juegos y plataformas. Grain: una fila por game_id + platform_id."
+    description: "Many-to-many game-to-platform relationship. Grain: one row per game_id + platform_id."
     tests:
       - unique_combination_of_columns:
           arguments:
@@ -46,7 +46,7 @@ models:
                 field: platform_id
 
   - name: int_game_companies
-    description: "Participación de compañías en videojuegos. Grain: una fila por involved_company_id."
+    description: "Company participation in games. Grain: one row per involved_company_id."
     columns:
       - name: involved_company_id
         tests:
@@ -68,7 +68,7 @@ models:
                 field: company_id
 
   - name: int_game_releases
-    description: "Eventos individuales de lanzamiento. Grain: una fila por release_date_id."
+    description: "Individual release events. Grain: one row per release_date_id."
     columns:
       - name: release_date_id
         tests:

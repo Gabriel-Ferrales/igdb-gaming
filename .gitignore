@@ -18,6 +18,7 @@ dbt/logs/
 dbt/dbt_packages/
 dbt/packages/
 dbt/profiles/profiles.yml
+/dbt/profiles/.user.yml
 
 # Terraform
 *.tfstate
@@ -34,11 +35,6 @@ crash.log
 *.pem
 *.key
 
-# Kestra runtime data
-kestra/data/
-kestra/storage/
-kestra/tmp/
-
 .DS_Store
 .vscode/
 
@@ -54,3 +50,7 @@ __pycache__/
 
 # Environment
 .env
+/docs/audits/
+
+# Other
+Roadmap.md

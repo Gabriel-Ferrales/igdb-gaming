@@ -1,59 +1,21 @@
+# Intermediate models
 
-``` mermaid
+These dbt views prepare relationships for the existing dimensional marts.
+
+| Model | Inputs | Grain and behavior | Consumer |
+| --- | --- | --- | --- |
+| `int_game_genres` | `stg_games` | Distinct non-null game/genre pairs from `UNNEST(genres)` | `bridge_game_genres` |
+| `int_game_platforms` | `stg_games` | Distinct non-null game/platform pairs from `UNNEST(platforms)` | `bridge_game_platforms` |
+| `int_game_companies` | `stg_involved_companies` | One row per involved-company ID; latest `updated_at`, then `_loaded_at`; non-null keys; null role flags become false | `fct_game_companies` |
+| `int_game_releases` | `stg_release_dates`, `stg_games` | One row per release-date ID; inner join to loaded games; latest `updated_at`, then `_loaded_at` | `fct_game_releases` |
+
+```mermaid
 flowchart LR
-    subgraph STAGING["Staging"]
-        SG[stg_games]
-        SGE[stg_genres]
-        SP[stg_platforms]
-        ST[stg_themes]
-        SM[stg_game_modes]
-        SIC[stg_involved_companies]
-        SC[stg_companies]
-        SR[stg_release_dates]
-    end
-
-    subgraph INTERMEDIATE["Intermediate"]
-        IG[int_game_genres<br/>game_id + genre_id]
-        IP[int_game_platforms<br/>game_id + platform_id]
-        IT[int_game_themes<br/>game_id + theme_id]
-        IM[int_game_modes<br/>game_id + game_mode_id]
-        IC[int_game_companies<br/>involved_company_id]
-        IR[int_game_releases<br/>release_date_id]
-    end
-
-    subgraph MARTS["Future marts"]
-        BG[bridge_game_genres]
-        BP[bridge_game_platforms]
-        BT[bridge_game_themes]
-        BM[bridge_game_modes]
-        FC[fct_game_companies]
-        FR[fct_game_releases]
-    end
-
-    SG --> IG
-    SGE --> IG
-
-    SG --> IP
-    SP --> IP
-
-    SG --> IT
-    ST --> IT
-
-    SG --> IM
-    SM --> IM
-
-    SIC --> IC
-    SC --> IC
-    SG --> IC
-
-    SR --> IR
-    SG --> IR
-    SP --> IR
-
-    IG --> BG
-    IP --> BP
-    IT --> BT
-    IM --> BM
-    IC --> FC
-    IR --> FR
+    G["stg_games"] --> GG["int_game_genres"] --> BG["bridge_game_genres"]
+    G --> GP["int_game_platforms"] --> BP["bridge_game_platforms"]
+    IC["stg_involved_companies"] --> GC["int_game_companies"] --> FC["fct_game_companies"]
+    R["stg_release_dates"] --> GR["int_game_releases"] --> FR["fct_game_releases"]
+    G --> GR
 ```
+
+Relationship tests validate referenced games, genres, platforms, and companies; the genre/platform dimensions are not joined by the corresponding intermediate views. See the [marts model](marts_model.md) for downstream grains and metric semantics.
