@@ -1,6 +1,9 @@
 # IGDB ingestion
 
-Generic historical extraction for the configured IGDB endpoints. Extraction uses
+Run the commands below from `ingestion/` after completing the root
+[setup instructions](../README.md#setup-and-configuration).
+
+Historical extraction for the configured IGDB endpoints. Extraction uses
 ID keyset pagination, uploads one immutable JSON object per page, and writes a
 completed or failed batch manifest after page processing.
 
@@ -46,87 +49,35 @@ preserved and the derived `*_ts` field is written as `NULL`. A loader run exits
 non-zero when one or more selected batches fail (after attempting all selected
 batches), so failed batches can be recovered with `--retry-failed`.
 
+## End-to-end workflow
+
 ```mermaid
 flowchart TD
-    classDef source fill:#F9AB00,stroke:#333,stroke-width:1px,color:#000;
-    classDef gcs fill:#4285F4,stroke:#333,stroke-width:1px,color:#fff;
-    classDef bq fill:#EA4335,stroke:#333,stroke-width:1px,color:#fff;
-    classDef process fill:#34A853,stroke:#333,stroke-width:1px,color:#fff;
-    classDef decision fill:#FBBC04,stroke:#333,stroke-width:1px,color:#000;
-    classDef cli fill:#9334E6,stroke:#333,stroke-width:1px,color:#fff;
-    classDef future fill:#9AA0A6,stroke:#333,stroke-width:1px,color:#fff;
+    API["IGDB API"] --> EX["Keyset-paginated extraction"]
+    EX --> RAW["GCS raw JSON + batch manifest"]
+    RAW --> DISC["Completed manifest discovery and selection"]
+    DISC --> CONV["Validated JSON to NDJSON conversion"]
+    CONV --> READY["GCS load_ready/ + conversion manifest"]
+    READY --> STG["BigQuery staging · WRITE_TRUNCATE"]
+    STG --> CHECK["Count, null-ID, and duplicate-ID checks"]
+    CHECK --> MERGE["MERGE by ID into raw endpoint table"]
+    MERGE --> DBT["dbt views and analytical tables"]
+    REG["BigQuery batch registry"] --> DISC
+    MERGE --> REG
+```
 
-    subgraph Phase1["Fase 1: Extracción"]
-        A["IGDB API"]:::source
-        B["Extractor paginado<br/>igdb_pipeline.cli"]:::process
-        C[("GCS<br/>raw/{endpoint}/.../batch_id={id}/")]:::gcs
-        CM["manifest.json<br/>Commit marker del batch"]:::gcs
+The registry records conversion/loading status and failures. Raw GCS files stay
+unchanged; raw BigQuery tables retain the current loaded row per ID. dbt modeling
+is implemented and is invoked separately after loading. The extraction CLI
+supports historical batches; persisted incremental watermarks and scheduled
+orchestration remain future work.
 
-        A -->|"HTTP POST"| B
-        B -->|"JSON array por página"| C
-        B -->|"status = completed"| CM
-    end
+`--max-batches` limits pending-batch selection, not extraction volume. Use
+`--batch-id <batch-id>` to target a specific batch. A small games extraction alone
+does not supply all six raw tables required by dbt.
 
-    subgraph Phase2["Fase 2: Descubrimiento y selección"]
-        CLI["CLI manual o programada<br/>igdb_pipeline.load_cli"]:::cli
-        D["Batch Discovery<br/>Busca manifest.json"]:::process
-        E["Validación del manifest<br/>y archivos fuente"]:::process
-        F{¿Batch elegible?}:::decision
-        R[("BigQuery<br/>gaming_raw.ingestion_batches")]:::bq
-
-        CLI -->|"discover / run"| D
-        CM --> D
-        D --> E
-        E --> F
-        R -->|"Consulta estado previo"| F
-        F -->|"No: incomplete, loaded<br/>o no seleccionado"| SKIP["Ignorar batch"]:::process
-        F -->|"Sí: nuevo, converted<br/>o retry-failed"| R
-    end
-
-    subgraph Phase3["Fase 3: Conversión"]
-        G["Conversor JSON array → NDJSON<br/>Procesa un objeto de GCS a la vez"]:::process
-        H[("GCS<br/>load_ready/{endpoint}/.../batch_id={id}/")]:::gcs
-        CH["conversion_manifest.json"]:::gcs
-
-        R -->|"status = converting"| G
-        C -->|"Lee archivos raw sin modificarlos"| G
-        G -->|"Escribe archivos .ndjson"| H
-        G -->|"Conteos y metadata de conversión"| CH
-        CH -->|"status = converted"| R
-    end
-
-    subgraph Phase4["Fase 4: Carga y validación"]
-        I["BigQuery Load Job"]:::process
-        S[("BigQuery<br/>gaming_raw.stg_{endpoint}")]:::bq
-        V{¿Validaciones correctas?}:::decision
-        L["MERGE por id"]:::process
-        M[("BigQuery<br/>gaming_raw.{endpoint}<br/>Estado actual por ID")]:::bq
-        FAIL["Registrar error<br/>status = failed"]:::process
-
-        H -->|"NDJSON del batch"| I
-        R -->|"status = loading"| I
-        I -->|"WRITE_TRUNCATE"| S
-        S -->|"Conteo, IDs nulos,<br/>duplicados, min y max"| V
-        V -->|"Sí"| L
-        L --> M
-        M -->|"status = loaded<br/>y métricas finales"| R
-        V -->|"No"| FAIL
-        I -->|"Error de carga"| FAIL
-        G -->|"Error de conversión"| FAIL
-        FAIL --> R
-    end
-
-    subgraph Phase5["Fase 5: Transformación analítica"]
-        DBT["dbt<br/>Modelos staging, intermedios y marts"]:::future
-        M -.->|"Siguiente fase"| DBT
-    end
-``` 
-
-### 💡 Puntos clave reflejados en el flujo:
-* raw/ es la zona original e inmutable.
-* manifest.json determina si un batch es procesable.
-* ingestion_batches controla estados, reintentos e idempotencia.
-* load_ready/ contiene los archivos NDJSON compatibles con BigQuery.
-* stg_* es temporal y se sobrescribe por batch.
-* gaming_raw.* conserva una fila actual por id.
-* dbt realizará después el modelado analítico y el UNNEST de relaciones.
+The optional `scripts/run_historical_pipeline.sh` assumes an existing
+`igdb-ingestion:local` Docker image, execution from `ingestion/`, and an exported
+`GOOGLE_APPLICATION_CREDENTIALS` path. It processes only companies, games,
+involved companies, and release dates, assuming platforms and genres are already
+loaded. It is a full-backfill helper rather than a required demonstration step.

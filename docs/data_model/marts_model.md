@@ -79,3 +79,8 @@ flowchart LR
   external aggregate scores supplied by IGDB.
 - Rating models represent the current loaded state only. `snapshot_date` is the
   table build date and does not provide rating history.
+- `platform_performance.first_release_date` is the earliest recorded game release
+  event associated with a platform, not its verified commercial launch date.
+- Source dates can be approximate or inconsistent. The loaded-snapshot audit
+  validated date lineage and platform/yearly aggregations, not historical source
+  accuracy. See the [README limitations](../../README.md#data-quality--limitations).

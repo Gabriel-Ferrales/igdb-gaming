@@ -6,7 +6,7 @@ include $(ENV_FILE)
 export
 endif
 
-.PHONY: help setup ingestion-install ingestion-test ingestion-lint dbt-install dbt-debug dbt-build-dev dbt-build-prod terraform-init terraform-fmt terraform-validate kestra-up kestra-down clean
+.PHONY: help setup ingestion-install ingestion-test ingestion-lint dbt-install dbt-debug dbt-build-dev dbt-build-prod terraform-init terraform-fmt terraform-validate clean
 
 help:
 	@awk 'BEGIN {FS = ":.*## "}; /^[a-zA-Z_-]+:.*## / {printf "%-24s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
@@ -32,10 +32,6 @@ terraform-fmt: ## Format Terraform recursively
 	cd terraform && terraform fmt -recursive
 terraform-validate: ## Validate Terraform configuration
 	cd terraform && terraform validate
-kestra-up: ## Start the Kestra stack
-	cd kestra && docker compose up -d
-kestra-down: ## Stop the Kestra stack
-	cd kestra && docker compose down
 clean: ## Remove generated local artifacts
 	cd ingestion && rm -rf .venv .pytest_cache .ruff_cache
 	cd dbt && rm -rf .venv target logs dbt_packages
